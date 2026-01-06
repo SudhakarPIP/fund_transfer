@@ -1,0 +1,26 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: account-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/pip?useSSL=false&serverTimezone=UTC
+    username: root
+    password: Svmr12!@
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+
