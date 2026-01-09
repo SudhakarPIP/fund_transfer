@@ -3,22 +3,105 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8.0
+    container_name: mysql-db
     environment:
       MYSQL_ROOT_PASSWORD: Svmr12!@
       MYSQL_DATABASE: pip
     ports:
       - "3306:3306"
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  fund-transfer:
-    build: .
+  account-service:
+    build:
+      context: ./account-service
+      dockerfile: Dockerfile
+    container_name: account-service
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/pip?useSSL=false&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: Svmr12!@
+      SPRING_PROFILES_ACTIVE: ""
     ports:
-      - "8080:8080"
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8081 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  transaction-service:
+    build:
+      context: ./transaction-service
+      dockerfile: Dockerfile
+    container_name: transaction-service
+    depends_on:
+      mysql:
+        condition: service_healthy
+      account-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/pip?useSSL=false&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Svmr12!@
+      WEBCLIENT_ACCOUNT_SERVICE_BASE_URL: http://account-service:8081
+      WEBCLIENT_NOTIFICATION_SERVICE_BASE_URL: http://notification-service:8083
+      SPRING_PROFILES_ACTIVE: ""
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8082 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI port
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 1025 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    depends_on:
+      mailhog:
+        condition: service_healthy
+    environment:
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:mailhog}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:1025}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
+      SPRING_MAIL_FROM: ${SPRING_MAIL_FROM:noreply@fundtransfer.com}
+      SPRING_PROFILES_ACTIVE: ""
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8083 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
 

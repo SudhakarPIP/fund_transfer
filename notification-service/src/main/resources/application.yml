@@ -1,0 +1,37 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: notification-service
+  mail:
+    host: ${SPRING_MAIL_HOST:${MAIL_HOST:smtp.gmail.com}}
+    port: ${SPRING_MAIL_PORT:${MAIL_PORT:587}}
+    username: ${SPRING_MAIL_USERNAME:${MAIL_USERNAME:}}
+    password: ${SPRING_MAIL_PASSWORD:${MAIL_PASSWORD:}}
+    properties:
+      mail:
+        smtp:
+          auth: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:${MAIL_SMTP_AUTH:true}}
+          starttls:
+            enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:${MAIL_SMTP_STARTTLS_ENABLE:true}}
+            required: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED:${MAIL_SMTP_STARTTLS_REQUIRED:true}}
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+    from: ${SPRING_MAIL_FROM:${MAIL_FROM:noreply@fundtransfer.com}}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  health:
+    mail:
+      enabled: false  # Disable mail health check to avoid authentication errors with MailHog
+
+logging:
+  level:
+    com.example.notification: INFO
+    org.springframework.mail: DEBUG
+

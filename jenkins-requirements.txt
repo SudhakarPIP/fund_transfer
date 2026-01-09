@@ -1,0 +1,140 @@
+Jenkins CI/CD Pipeline Requirements
+====================================
+
+## Jenkins Server Requirements
+
+1. **Jenkins LTS** (2.400+)
+2. **Java 17** installed on Jenkins agent
+3. **Maven 3.9+** installed or configured in Jenkins
+4. **Docker** installed and running on Jenkins agent
+5. **Docker Compose** installed on Jenkins agent
+
+## Required Jenkins Plugins
+
+Install the following plugins via Jenkins Plugin Manager:
+
+1. **Pipeline** (pipeline plugin)
+2. **Docker Pipeline** (docker-workflow)
+3. **SonarQube Scanner** (sonar) - Optional
+4. **Credentials Binding** (credentials-binding)
+5. **JUnit** (junit)
+6. **Git** (git) - If using Git SCM
+
+## Jenkins Configuration
+
+### Global Tools Configuration
+
+1. Go to **Manage Jenkins** → **Global Tool Configuration**
+
+2. **Maven Configuration**:
+   - Name: `Maven-3.9`
+   - Install automatically: ✓
+   - Version: Latest 3.9.x
+
+3. **JDK Configuration**:
+   - Name: `JDK-17`
+   - Install automatically: ✓
+   - Version: Java 17
+
+### SonarQube Configuration (Optional)
+
+1. Go to **Manage Jenkins** → **Configure System**
+
+2. **SonarQube Servers**:
+   - Name: `SonarQube`
+   - Server URL: `http://your-sonarqube-server:9000`
+   - Add SonarQube token as credentials
+
+3. **Environment Variable** (Optional):
+   - Name: `SONARQUBE_ENABLED`
+   - Value: `true`
+
+### Docker Registry Configuration (Optional)
+
+1. Go to **Manage Jenkins** → **Credentials** → **System** → **Global credentials**
+
+2. **Add Credentials**:
+   - Kind: `Username with password`
+   - ID: `docker-registry-credentials`
+   - Username: Your registry username
+   - Password: Your registry password
+
+3. **Environment Variable**:
+   - Name: `DOCKER_REGISTRY`
+   - Value: `your-registry.com` (e.g., `docker.io`, `registry.example.com`)
+
+## System Requirements
+
+### Minimum Resources
+
+- **CPU**: 2 cores
+- **RAM**: 4GB
+- **Disk**: 20GB free space
+
+### Recommended Resources
+
+- **CPU**: 4+ cores
+- **RAM**: 8GB+
+- **Disk**: 50GB+ free space
+
+## Network Requirements
+
+- Jenkins agent must have access to:
+  - Docker registry (if pushing images)
+  - SonarQube server (if using SonarQube)
+  - Git repository (if using Git SCM)
+  - Ports 8081, 8082, 8083 (for service health checks)
+
+## Verification
+
+Run these commands on Jenkins agent to verify setup:
+
+```bash
+# Check Java version
+java -version  # Should be 17+
+
+# Check Maven
+mvn -version  # Should be 3.9+
+
+# Check Docker
+docker --version
+docker-compose --version
+
+# Check Docker daemon
+docker ps
+```
+
+## Troubleshooting
+
+### Jenkins Agent Cannot Access Docker
+
+If Jenkins agent cannot access Docker:
+
+1. Add Jenkins user to docker group:
+   ```bash
+   sudo usermod -aG docker jenkins
+   ```
+
+2. Restart Jenkins:
+   ```bash
+   sudo systemctl restart jenkins
+   ```
+
+### Maven Build Fails
+
+1. Check Maven is configured in Jenkins
+2. Verify Java version is 17
+3. Check Maven settings.xml for repository configuration
+
+### Docker Build Fails
+
+1. Verify Docker is running: `docker ps`
+2. Check Dockerfile syntax
+3. Ensure JAR files exist before Docker build
+
+### SonarQube Fails
+
+1. Verify SonarQube server is accessible
+2. Check SonarQube token is valid
+3. Set `SONARQUBE_ENABLED=false` to skip SonarQube stage
+

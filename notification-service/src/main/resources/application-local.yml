@@ -1,0 +1,33 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: notification-service
+  mail:
+    host: localhost
+    port: 587
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
+    from: noreply@fundtransfer.com
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  health:
+    mail:
+      enabled: false  # Disable mail health check for local development
+
+logging:
+  level:
+    com.example.notification: INFO
+
